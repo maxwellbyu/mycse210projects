@@ -2,7 +2,7 @@ using System;
 
 class Program
 {
-    static void Main()
+    static void Main(string[] args)
     {
         // Prompt the user for their first name
         Console.Write("What is your first name? ");
