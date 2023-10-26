@@ -57,8 +57,7 @@ class Program
         while (true)
         {
             display.DisplayNextWord();
-            Thread.Sleep(1000); // Adjust the delay
+            Thread.Sleep(1000); // Adjust the delay (in milliseconds) between word hiding.
         }
     }
 }
-
