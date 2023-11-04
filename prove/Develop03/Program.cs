@@ -1,64 +1,107 @@
 using System;
-using System.Threading;
+using System.Collections.Generic;
+using System.Linq;
 
-class ScriptureDisplay
+class Word
 {
-    private string scripture;
-    private string[] words;
-    private int currentIndex;
+    public string Text { get; set; }
+    public bool IsHidden { get; set; }
 
-    public string Scripture
+    public Word(string text)
     {
-        get { return scripture; }
-        set { scripture = value; }
+        Text = text;
+        IsHidden = false;
     }
 
-    public int CurrentIndex
+    public void Hide()
     {
-        get { return currentIndex; }
-        private set { currentIndex = value; }
+        IsHidden = true;
     }
 
-    public ScriptureDisplay(string text)
+    public void Display()
     {
-        Scripture = text;
-        words = Scripture.Split(' ');
-        CurrentIndex = 0;
-    }
-
-    public void DisplayNextWord()
-    {
-        if (CurrentIndex < words.Length)
+        if (IsHidden)
         {
-            Console.Clear();
-            for (int i = 0; i <= CurrentIndex; i++)
-            {
-                Console.Write(words[i] + " ");
-            }
-            CurrentIndex++;
+            Console.Write("[HIDDEN] ");
         }
         else
         {
-            Console.WriteLine("The entire scripture is hidden.");
+            Console.Write(Text + " ");
         }
+    }
+}
+
+class Reference
+{
+    public string Text { get; set; }
+
+    public Reference(string text)
+    {
+        Text = text;
+    }
+
+    public void Display()
+    {
+        Console.WriteLine("Scripture Reference: " + Text);
+    }
+}
+
+class Scripture
+{
+    private List<Word> words;
+    private Reference reference;
+
+    public Scripture(string referenceText, string scriptureText)
+    {
+        reference = new Reference(referenceText);
+        words = scriptureText.Split(' ').Select(word => new Word(word)).ToList();
+    }
+
+    public void Display()
+    {
+        reference.Display();
+        foreach (var word in words)
+        {
+            word.Display();
+        }
+        Console.WriteLine();
+    }
+
+    public void HideRandomWord()
+    {
+        Random random = new Random();
+        int index = random.Next(0, words.Count);
+        words[index].Hide();
+    }
+
+    public bool AllWordsHidden()
+    {
+        return words.All(word => word.IsHidden);
     }
 }
 
 class Program
 {
-    static void Main()
+    static void Main(string[] args)
     {
-        string john316 = "For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.";
-        ScriptureDisplay display = new ScriptureDisplay(john316);
+        string referenceText = "Proverbs 3:5";
+        string scriptureText = "Trust in the LORD with all thine heart; and lean not unto thine own understanding.";
 
-        Console.WriteLine("Press any key to hide the words (or Ctrl+C to exit).");
-        Console.ReadKey();
+        Scripture scripture = new Scripture(referenceText, scriptureText);
 
-        while (true)
+        while (!scripture.AllWordsHidden())
         {
-            display.DisplayNextWord();
-            Thread.Sleep(1000); // Adjust the delay
+            scripture.Display();
+            Console.WriteLine("Press Enter to hide a word or type 'quit' to exit.");
+            string input = Console.ReadLine();
+
+            if (input.ToLower() == "quit")
+            {
+                break;
+            }
+
+            scripture.HideRandomWord();
+            Console.Clear();
         }
     }
 }
-
