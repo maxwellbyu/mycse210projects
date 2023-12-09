@@ -1,12 +1,21 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 // Base class for all activities
 public abstract class Activity
 {
-    public string Name { get; set; }
-    public int Points { get; set; }
+    protected string _name;
+    protected int _points;
+    protected string _description;
+
+    public Activity(string name, int points, string description)
+    {
+        _name = name;
+        _points = points;
+        _description = description;
+    }
 
     public abstract void MarkComplete();
     public abstract void RecordEvent();
@@ -17,109 +26,149 @@ public abstract class Activity
 // Derived classes for specific goals
 public class SimpleGoal : Activity
 {
-    public int CompletionPoints { get; set; }
+    public SimpleGoal(string name, string description) : base(name, 0, description) { }
 
-    public override void MarkComplete() { }
+    public override void MarkComplete()
+    {
+        Console.WriteLine($"Simple goal '{_name}' marked complete.");
+    }
 
-    public override void RecordEvent() { }
+    public override void RecordEvent()
+    {
+        Console.WriteLine($"Event recorded for simple goal '{_name}'.");
+        _points += 100; // Example: Adding 100 points for simplicity
+        MarkComplete();
+    }
 
-    public override void DisplayStatus() { }
+    public override void DisplayStatus()
+    {
+        Console.WriteLine($"Simple goal '{_name}' status: {_description}");
+    }
 
     public override string GetStringRepresentation() =>
-        $"SimpleGoal:{Name},{CompletionPoints}";
+        $"SimpleGoal:{_name},{_points},{_description}";
 }
 
 public class EternalGoal : Activity
 {
-    public int EventPoints { get; set; }
+    public EternalGoal(string name, string description) : base(name, 0, description) { }
 
-    public override void MarkComplete() { }
+    public override void MarkComplete()
+    {
+        Console.WriteLine($"Eternal goal '{_name}' marked complete.");
+    }
 
-    public override void RecordEvent() { }
+    public override void RecordEvent()
+    {
+        Console.WriteLine($"Event recorded for eternal goal '{_name}'.");
+        _points += 50; // Example: Adding 50 points for simplicity
+        MarkComplete();
+    }
 
-    public override void DisplayStatus() { }
+    public override void DisplayStatus()
+    {
+        Console.WriteLine($"Eternal goal '{_name}' status: {_description}");
+    }
 
     public override string GetStringRepresentation() =>
-        $"EternalGoal:{Name},{EventPoints}";
+        $"EternalGoal:{_name},{_points},{_description}";
 }
 
 public class ChecklistGoal : Activity
 {
-    public int RequiredCompletions { get; set; }
-    public int BonusPoints { get; set; }
-    private int completions;
+    protected int _requiredCompletions;
+    protected int _bonusPoints;
+    private int _completions;
 
-    public override void MarkComplete() { }
+    public ChecklistGoal(string name, string description, int requiredCompletions, int bonusPoints)
+        : base(name, 0, description)
+    {
+        _requiredCompletions = requiredCompletions;
+        _bonusPoints = bonusPoints;
+    }
+
+    public override void MarkComplete()
+    {
+        Console.WriteLine($"Checklist goal '{_name}' marked complete.");
+    }
 
     public override void RecordEvent()
     {
-        completions++;
-        if (completions == RequiredCompletions)
+        Console.WriteLine($"Event recorded for checklist goal '{_name}'.");
+        _completions++;
+        if (_completions == _requiredCompletions)
         {
-            Points += BonusPoints;
+            _points += _bonusPoints;
             MarkComplete();
         }
     }
 
-    public override void DisplayStatus() { }
+    public override void DisplayStatus()
+    {
+        Console.WriteLine($"Checklist goal '{_name}' status: {_description}");
+    }
 
     public override string GetStringRepresentation() =>
-        $"ChecklistGoal:{Name},{RequiredCompletions},{BonusPoints}";
+        $"ChecklistGoal:{_name},{_points},{_description},{_requiredCompletions},{_bonusPoints}";
 }
 
 // User class to manage goals and scores
 public class User
 {
-    public List<Activity> Goals { get; set; } = new List<Activity>();
-    public int TotalScore { get; set; }
+    protected List<Activity> _goals = new List<Activity>();
+    protected int _totalScore;
 
-    public void CreateGoal(string goalType, string goalName, int completionPoints = 0, int eventPoints = 0, int requiredCompletions = 0, int bonusPoints = 0)
+    public void CreateGoal(string goalType, string goalName, string description,
+        int completionPoints = 0, int eventPoints = 0, int requiredCompletions = 0, int bonusPoints = 0)
     {
         Activity goal = goalType switch
         {
-            "Simple" => new SimpleGoal { Name = goalName, CompletionPoints = completionPoints },
-            "Eternal" => new EternalGoal { Name = goalName, EventPoints = eventPoints },
-            "Checklist" => new ChecklistGoal { Name = goalName, RequiredCompletions = requiredCompletions, BonusPoints = bonusPoints },
+            "Simple" => new SimpleGoal(goalName, description),
+            "Eternal" => new EternalGoal(goalName, description),
+            "Checklist" => new ChecklistGoal(goalName, description, requiredCompletions, bonusPoints),
             _ => null
         };
 
-        Goals.Add(goal);
+        _goals.Add(goal);
     }
 
     public void RecordEvent(string goalName)
     {
-        Activity goal = Goals.Find(g => g.Name == goalName);
+        Activity goal = _goals.Find(g => g.GetStringRepresentation().Contains(goalName));
         goal?.RecordEvent();
-        TotalScore += goal?.Points ?? 0;
+        _totalScore += goal?.GetPoints() ?? 0;
     }
 
     public void DisplayGoals() =>
-        Goals.ForEach(g => g.DisplayStatus());
+        _goals.ForEach(g => g.DisplayStatus());
 
     public void SaveGoalsToFile(string fileName) =>
-        File.WriteAllLines(fileName, Goals.Select(g => g.GetStringRepresentation()));
+        File.WriteAllLines(fileName, _goals.Select(g => g.GetStringRepresentation()));
 
     public void LoadGoalsFromFile(string fileName)
     {
-        Goals.Clear();
+        _goals.Clear();
         File.ReadAllLines(fileName)
             .Select(line =>
             {
                 string[] parts = line.Split(":");
                 string goalType = parts[0];
                 string[] details = parts[1].Split(",");
+                string goalName = details[0];
+                string description = details[details.Length - 1];
 
                 return goalType switch
                 {
-                    "SimpleGoal" => new SimpleGoal { Name = details[0], CompletionPoints = int.Parse(details[1]) },
-                    "EternalGoal" => new EternalGoal { Name = details[0], EventPoints = int.Parse(details[1]) },
-                    "ChecklistGoal" => new ChecklistGoal { Name = details[0], RequiredCompletions = int.Parse(details[1]), BonusPoints = int.Parse(details[2]) },
+                    "SimpleGoal" => new SimpleGoal(goalName, description),
+                    "EternalGoal" => new EternalGoal(goalName, description),
+                    "ChecklistGoal" => new ChecklistGoal(goalName, description,
+                        int.Parse(details[1]), int.Parse(details[2])),
                     _ => null
                 };
             })
             .Where(goal => goal != null)
             .ToList()
-            .ForEach(goal => Goals.Add(goal));
+            .ForEach(goal => _goals.Add(goal));
     }
 }
 
@@ -130,16 +179,17 @@ class Program
     {
         User mainUser = new User();
 
-        mainUser.CreateGoal("Simple", "Give a talk", completionPoints: 100);
-        mainUser.CreateGoal("Eternal", "Spend time with family", eventPoints: 50);
-        mainUser.CreateGoal("Checklist", "Clean the chapel", requiredCompletions: 5, bonusPoints: 200);
+        mainUser.CreateGoal("Simple", "Give a talk", "Description for giving a talk");
+        mainUser.CreateGoal("Eternal", "Spend time with family", "Description for spending time with family");
+        mainUser.CreateGoal("Checklist", "Clean the chapel", "Description for cleaning the chapel",
+            requiredCompletions: 5, bonusPoints: 200);
 
         mainUser.RecordEvent("Give a talk");
         mainUser.RecordEvent("Spend time with family");
         mainUser.RecordEvent("Clean the chapel");
 
         mainUser.DisplayGoals();
-        Console.WriteLine($"Total Score: {mainUser.TotalScore}");
+        Console.WriteLine($"Total Score: {mainUser.GetTotalScore()}");
 
         mainUser.SaveGoalsToFile("goals.txt");
 
@@ -147,6 +197,6 @@ class Program
         loadedUser.LoadGoalsFromFile("goals.txt");
 
         loadedUser.DisplayGoals();
-        Console.WriteLine($"Total Score: {loadedUser.TotalScore}");
+        Console.WriteLine($"Total Score: {loadedUser.GetTotalScore()}");
     }
 }
