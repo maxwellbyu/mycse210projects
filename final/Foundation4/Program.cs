@@ -1,144 +1,156 @@
 using System;
-
-// Abstraction: Define an abstract class for a generic shape.
-public abstract class Shape
-{
-    // Abstract method for calculating the area of a shape
-    public abstract double CalculateArea();
-
-    // Abstract method for displaying shape details
-    public abstract void Display();
-}
-
-// Inheritance: Create concrete classes for different types of shapes.
-public class Circle : Shape
-{
-    public double Radius { get; set; }
-
-    public Circle(double radius)
-    {
-        Radius = radius;
-    }
-
-    public override double CalculateArea()
-    {
-        return Math.PI * Math.Pow(Radius, 2);
-    }
-
-    public override void Display()
-    {
-        Console.WriteLine($"Circle - Radius: {Radius}, Area: {CalculateArea()}");
-    }
-}
-
-public class Rectangle : Shape
-{
-    public double Length { get; set; }
-    public double Width { get; set; }
-
-    public Rectangle(double length, double width)
-    {
-        Length = length;
-        Width = width;
-    }
-
-    public override double CalculateArea()
-    {
-        return Length * Width;
-    }
-
-    public override void Display()
-    {
-        Console.WriteLine($"Rectangle - Length: {Length}, Width: {Width}, Area: {CalculateArea()}");
-    }
-}
-
-// Encapsulation: Create a ShapeManager class encapsulating shapes.
-public class ShapeManager
-{
-    private List<Shape> shapes;
-
-    public ShapeManager()
-    {
-        shapes = new List<Shape>();
-    }
-
-    // Polymorphism: Use the Shape base class for flexibility.
-    public void AddShape(Shape shape)
-    {
-        shapes.Add(shape);
-        Console.WriteLine("Shape added to the Shape Hierarchy.");
-    }
-
-    // Display all shapes in the Shape Hierarchy
-    public void DisplayShapes()
-    {
-        if (shapes.Count == 0)
-        {
-            Console.WriteLine("No shapes in the Shape Hierarchy.");
-        }
-        else
-        {
-            Console.WriteLine("Shape Hierarchy:");
-            foreach (var shape in shapes)
-            {
-                shape.Display();
-            }
-        }
-    }
-}
+using System.Collections.Generic;
 
 class Program
 {
     static void Main()
     {
-        Console.WriteLine("Welcome to the Shape Hierarchy!");
+        // Create activities
+        Activity runningActivity = new Running(new DateTime(2022, 11, 3), 30, 3.0);
+        Activity cyclingActivity = new Cycling(new DateTime(2022, 11, 3), 30, 20);
+        Activity swimmingActivity = new Swimming(new DateTime(2022, 11, 3), 30, 10);
 
-        ShapeManager shapeManager = new ShapeManager();
-
-        // Abstraction, Encapsulation, and Polymorphism:
-        // Allow the user to add shapes until they choose to exit.
-        while (true)
+        // Create a list of activities
+        List<Activity> activities = new List<Activity>
         {
-            Console.WriteLine("Select a shape to add:");
-            Console.WriteLine("1. Circle");
-            Console.WriteLine("2. Rectangle");
-            Console.WriteLine("3. Display Shapes");
-            Console.WriteLine("4. Exit");
+            runningActivity,
+            cyclingActivity,
+            swimmingActivity
+        };
 
-            Console.Write("Enter your choice (1-4): ");
-            int choice = Convert.ToInt32(Console.ReadLine());
-
-            switch (choice)
-            {
-                case 1:
-                    Console.Write("Enter the radius of the circle: ");
-                    double circleRadius = Convert.ToDouble(Console.ReadLine());
-                    Circle circle = new Circle(circleRadius);
-                    shapeManager.AddShape(circle);
-                    break;
-
-                case 2:
-                    Console.Write("Enter the length of the rectangle: ");
-                    double rectangleLength = Convert.ToDouble(Console.ReadLine());
-                    Console.Write("Enter the width of the rectangle: ");
-                    double rectangleWidth = Convert.ToDouble(Console.ReadLine());
-                    Rectangle rectangle = new Rectangle(rectangleLength, rectangleWidth);
-                    shapeManager.AddShape(rectangle);
-                    break;
-
-                case 3:
-                    shapeManager.DisplayShapes();
-                    break;
-
-                case 4:
-                    Console.WriteLine("Exiting Shape Hierarchy App. Goodbye!");
-                    return;
-
-                default:
-                    Console.WriteLine("Invalid choice. Please enter a number between 1 and 4.");
-                    break;
-            }
+        // Display summary for each activity
+        foreach (var activity in activities)
+        {
+            Console.WriteLine(activity.GetSummary());
+            Console.WriteLine();
         }
+    }
+}
+
+class Activity
+{
+    private DateTime date;
+    protected int minutes; // Change access modifier to protected
+
+    public Activity(DateTime date, int minutes)
+    {
+        this.date = date;
+        this.minutes = minutes;
+    }
+
+    public virtual double GetDistance()
+    {
+        return 0; // Default implementation, to be overridden in derived classes
+    }
+
+    public virtual double GetSpeed()
+    {
+        return 0; // Default implementation, to be overridden in derived classes
+    }
+
+    public virtual double GetPace()
+    {
+        return 0; // Default implementation, to be overridden in derived classes
+    }
+
+    public virtual string GetSummary()
+    {
+        return $"{date.ToShortDateString()} - {GetType().Name} ({minutes} min)";
+    }
+}
+
+class Running : Activity
+{
+    private double distance;
+
+    public Running(DateTime date, int minutes, double distance)
+        : base(date, minutes)
+    {
+        this.distance = distance;
+    }
+
+    public override double GetDistance()
+    {
+        return distance;
+    }
+
+    public override double GetSpeed()
+    {
+        return distance / minutes * 60;
+    }
+
+    public override double GetPace()
+    {
+        return minutes / distance;
+    }
+
+    public override string GetSummary()
+    {
+        return base.GetSummary() +
+               $": Distance {distance:F2} miles, Speed {GetSpeed():F2} mph, Pace: {GetPace():F2} min per mile";
+    }
+}
+
+class Cycling : Activity
+{
+    private double speed;
+
+    public Cycling(DateTime date, int minutes, double speed)
+        : base(date, minutes)
+    {
+        this.speed = speed;
+    }
+
+    public override double GetSpeed()
+    {
+        return speed;
+    }
+
+    public override double GetDistance()
+    {
+        return speed * minutes / 60;
+    }
+
+    public override double GetPace()
+    {
+        return 60 / speed;
+    }
+
+    public override string GetSummary()
+    {
+        return base.GetSummary() +
+               $": Distance {GetDistance():F2} miles, Speed {speed:F2} mph, Pace: {GetPace():F2} min per mile";
+    }
+}
+
+class Swimming : Activity
+{
+    private int laps;
+
+    public Swimming(DateTime date, int minutes, int laps)
+        : base(date, minutes)
+    {
+        this.laps = laps;
+    }
+
+    public override double GetDistance()
+    {
+        return laps * 50 / 1000; // Convert laps to kilometers
+    }
+
+    public override double GetSpeed()
+    {
+        return GetDistance() / minutes * 60;
+    }
+
+    public override double GetPace()
+    {
+        return minutes / GetDistance();
+    }
+
+    public override string GetSummary()
+    {
+        return base.GetSummary() +
+               $": Distance {GetDistance():F2} km, Speed {GetSpeed():F2} kph, Pace: {GetPace():F2} min per km";
     }
 }
