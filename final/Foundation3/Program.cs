@@ -1,115 +1,141 @@
 using System;
-using System.Collections.Generic;
-
-// Abstraction: Define an abstract class for a generic task.
-public abstract class Task
-{
-    public string Description { get; set; }
-
-    // Abstract method for displaying task details
-    public abstract void DisplayTask();
-}
-
-// Inheritance: Create concrete classes for different types of tasks.
-public class WorkTask : Task
-{
-    public override void DisplayTask()
-    {
-        Console.WriteLine($"[Work Task] {Description}");
-    }
-}
-
-public class PersonalTask : Task
-{
-    public override void DisplayTask()
-    {
-        Console.WriteLine($"[Personal Task] {Description}");
-    }
-}
-
-// Encapsulation: Create a ToDoList class encapsulating tasks.
-public class ToDoList
-{
-    private List<Task> tasks;
-
-    public ToDoList()
-    {
-        tasks = new List<Task>();
-    }
-
-    // Polymorphism: Use the Task base class for flexibility.
-    public void AddTask(Task task)
-    {
-        tasks.Add(task);
-        Console.WriteLine("Task added to the To-Do List.");
-    }
-
-    // Display all tasks in the To-Do List
-    public void DisplayTasks()
-    {
-        if (tasks.Count == 0)
-        {
-            Console.WriteLine("No tasks in the To-Do List.");
-        }
-        else
-        {
-            Console.WriteLine("To-Do List:");
-            foreach (var task in tasks)
-            {
-                task.DisplayTask();
-            }
-        }
-    }
-}
 
 class Program
 {
     static void Main()
     {
-        Console.WriteLine("Welcome to the To-Do List App!");
+        // Create addresses
+        Address address1 = new Address("123 Main St", "CityA", "StateA", "CountryA");
+        Address address2 = new Address("456 Elm St", "CityB", "StateB", "CountryB");
+        Address address3 = new Address("789 Oak St", "CityC", "StateC", "CountryC");
 
-        ToDoList toDoList = new ToDoList();
+        // Create events
+        Event lectureEvent = new Lecture("Lecture Title", "Description for Lecture", new DateTime(2023, 12, 15, 10, 30, 0), address1, "SpeakerA", 100);
 
-        // Loops: Allow the user to add tasks until they choose to exit.
-        while (true)
-        {
-            Console.WriteLine("Select an option:");
-            Console.WriteLine("1. Add Work Task");
-            Console.WriteLine("2. Add Personal Task");
-            Console.WriteLine("3. Display Tasks");
-            Console.WriteLine("4. Exit");
+        Event receptionEvent = new Reception("Reception Title", "Description for Reception", new DateTime(2023, 12, 16, 18, 0, 0), address2, "rsvp@example.com");
 
-            Console.Write("Enter your choice (1-4): ");
-            int choice = Convert.ToInt32(Console.ReadLine());
+        Event outdoorEvent = new OutdoorGathering("Outdoor Gathering Title", "Description for Outdoor Gathering", new DateTime(2023, 12, 17, 14, 0, 0), address3, "Sunny");
 
-            switch (choice)
-            {
-                case 1:
-                    Console.Write("Enter work task description: ");
-                    string workTaskDescription = Console.ReadLine();
-                    WorkTask workTask = new WorkTask { Description = workTaskDescription };
-                    toDoList.AddTask(workTask);
-                    break;
+        // Display marketing messages for each event
+        DisplayMarketingMessages(lectureEvent);
+        DisplayMarketingMessages(receptionEvent);
+        DisplayMarketingMessages(outdoorEvent);
+    }
 
-                case 2:
-                    Console.Write("Enter personal task description: ");
-                    string personalTaskDescription = Console.ReadLine();
-                    PersonalTask personalTask = new PersonalTask { Description = personalTaskDescription };
-                    toDoList.AddTask(personalTask);
-                    break;
+    static void DisplayMarketingMessages(Event ev)
+    {
+        Console.WriteLine("Standard Details:");
+        Console.WriteLine(ev.GetStandardDetails());
 
-                case 3:
-                    toDoList.DisplayTasks();
-                    break;
+        Console.WriteLine("\nFull Details:");
+        Console.WriteLine(ev.GetFullDetails());
 
-                case 4:
-                    Console.WriteLine("Exiting To-Do List App. Goodbye!");
-                    return;
+        Console.WriteLine("\nShort Description:");
+        Console.WriteLine(ev.GetShortDescription());
 
-                default:
-                    Console.WriteLine("Invalid choice. Please enter a number between 1 and 4.");
-                    break;
-            }
-        }
+        Console.WriteLine();
     }
 }
+
+class Event
+{
+    private string title;
+    private string description;
+    private DateTime dateTime;
+    private Address address;
+
+    public Event(string title, string description, DateTime dateTime, Address address)
+    {
+        this.title = title;
+        this.description = description;
+        this.dateTime = dateTime;
+        this.address = address;
+    }
+
+    public string GetStandardDetails()
+    {
+        return $"Title: {title}\nDescription: {description}\nDate: {dateTime.ToShortDateString()}\nTime: {dateTime.ToShortTimeString()}\nAddress: {address.GetFullAddress()}";
+    }
+
+    public virtual string GetFullDetails()
+    {
+        return GetStandardDetails();
+    }
+
+    public virtual string GetShortDescription()
+    {
+        return $"Type: Generic Event\nTitle: {title}\nDate: {dateTime.ToShortDateString()}";
+    }
+}
+
+class Lecture : Event
+{
+    private string speaker;
+    private int capacity;
+
+    public Lecture(string title, string description, DateTime dateTime, Address address, string speaker, int capacity)
+        : base(title, description, dateTime, address)
+    {
+        this.speaker = speaker;
+        this.capacity = capacity;
+    }
+
+    public override string GetFullDetails()
+    {
+        return base.GetFullDetails() + $"\nType: Lecture\nSpeaker: {speaker}\nCapacity: {capacity}";
+    }
+}
+
+class Reception : Event
+{
+    private string rsvpEmail;
+
+    public Reception(string title, string description, DateTime dateTime, Address address, string rsvpEmail)
+        : base(title, description, dateTime, address)
+    {
+        this.rsvpEmail = rsvpEmail;
+    }
+
+    public override string GetFullDetails()
+    {
+        return base.GetFullDetails() + $"\nType: Reception\nRSVP Email: {rsvpEmail}";
+    }
+}
+
+class OutdoorGathering : Event
+{
+    private string weather;
+
+    public OutdoorGathering(string title, string description, DateTime dateTime, Address address, string weather)
+        : base(title, description, dateTime, address)
+    {
+        this.weather = weather;
+    }
+
+    public override string GetFullDetails()
+    {
+        return base.GetFullDetails() + $"\nType: Outdoor Gathering\nWeather: {weather}";
+    }
+}
+
+class Address
+{
+    private string streetAddress;
+    private string city;
+    private string stateProvince;
+    private string country;
+
+    public Address(string streetAddress, string city, string stateProvince, string country)
+    {
+        this.streetAddress = streetAddress;
+        this.city = city;
+        this.stateProvince = stateProvince;
+        this.country = country;
+    }
+
+    public string GetFullAddress()
+    {
+        return $"{streetAddress}, {city}, {stateProvince}, {country}";
+    }
+}
+
