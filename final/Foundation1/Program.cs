@@ -1,60 +1,80 @@
 using System;
 using System.Collections.Generic;
 
-// Abstraction: Define an abstract class to represent a generic person.
-public abstract class Person
-{
-    public string Name { get; set; }
-    public int Age { get; set; }
-
-    // Abstract method for displaying information
-    public abstract void DisplayInfo();
-}
-
-// Inheritance: Student inherits from the Person class.
-public class Student : Person
-{
-    public int StudentId { get; set; }
-
-    // Encapsulation: Properties are encapsulated with private access modifiers.
-    private List<string> courses = new List<string>();
-
-    // Polymorphism: Override the DisplayInfo method in the derived class.
-    public override void DisplayInfo()
-    {
-        Console.WriteLine($"Student: {Name}, Age: {Age}, Student ID: {StudentId}");
-        Console.WriteLine("Courses enrolled:");
-        foreach (var course in courses)
-        {
-            Console.WriteLine($"- {course}");
-        }
-    }
-
-    // Method to enroll in a course
-    public void EnrollInCourse(string course)
-    {
-        courses.Add(course);
-        Console.WriteLine($"{Name} enrolled in {course}.");
-    }
-}
-
 class Program
 {
     static void Main()
     {
-        // Creating a student object
-        Student student = new Student
+        // Create videos
+        Video video1 = new Video("Title 1", "Author 1", 120);
+        Video video2 = new Video("Title 2", "Author 2", 180);
+        Video video3 = new Video("Title 3", "Author 3", 150);
+
+        // Add comments to videos
+        video1.AddComment("UserA", "Great video!");
+        video1.AddComment("UserB", "I enjoyed it!");
+
+        video2.AddComment("UserC", "Interesting content!");
+        video2.AddComment("UserD", "Keep it up!");
+
+        video3.AddComment("UserE", "Awesome video!");
+
+        // Create a list of videos
+        List<Video> videos = new List<Video> { video1, video2, video3 };
+
+        // Display information for each video
+        foreach (var video in videos)
         {
-            Name = "Maxwell Iwe",
-            Age = 20,
-            StudentId = 12345
-        };
+            Console.WriteLine("Title: " + video.Title);
+            Console.WriteLine("Author: " + video.Author);
+            Console.WriteLine("Length: " + video.Length + " seconds");
+            Console.WriteLine("Number of Comments: " + video.GetNumberOfComments());
 
-        // Using methods from the base class and derived class
-        student.EnrollInCourse("Math");
-        student.EnrollInCourse("History");
+            Console.WriteLine("Comments:");
+            foreach (var comment in video.Comments)
+            {
+                Console.WriteLine($"  {comment.UserName}: {comment.Text}");
+            }
 
-        // Displaying information using polymorphism
-        student.DisplayInfo();
+            Console.WriteLine();
+        }
     }
 }
+
+class Video
+{
+    public string Title { get; set; }
+    public string Author { get; set; }
+    public int Length { get; set; }
+    public List<Comment> Comments { get; } = new List<Comment>();
+
+    public Video(string title, string author, int length)
+    {
+        Title = title;
+        Author = author;
+        Length = length;
+    }
+
+    public void AddComment(string userName, string text)
+    {
+        Comments.Add(new Comment(userName, text));
+    }
+
+    public int GetNumberOfComments()
+    {
+        return Comments.Count;
+    }
+}
+
+class Comment
+{
+    public string UserName { get; set; }
+    public string Text { get; set; }
+
+    public Comment(string userName, string text)
+    {
+        UserName = userName;
+        Text = text;
+    }
+}
+
